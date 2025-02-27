@@ -1,13 +1,13 @@
-package com.cart.cartproject.application.dto.responseDto;
+package com.cart.cartproject.application.dto.responseDto.UserDTO;
 
 import lombok.Data;
 
 @Data
 public class ViewUsersDTO {
-    private Integer id;
+    private Long id;
     private String username;
     private String email;
     private String userRole;
-    private String activeStatus;
+    private boolean activeStatus;
     private String accountStatus;
 }

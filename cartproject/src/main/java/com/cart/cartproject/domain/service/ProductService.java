@@ -1,18 +1,19 @@
 package com.cart.cartproject.domain.service;
 
-import com.cart.cartproject.application.dto.requestDto.AddProductDTO;
-import com.cart.cartproject.application.dto.requestDto.HoldDTO;
-import com.cart.cartproject.application.dto.requestDto.UpdateProductDTO;
-import com.cart.cartproject.application.dto.responseDto.ViewProductDTO;
+import com.cart.cartproject.application.dto.requestDto.CartDTO.AddToCartDTO;
+import com.cart.cartproject.application.dto.requestDto.ProductDTO.AddProductDTO;
+import com.cart.cartproject.application.dto.requestDto.ProductDTO.HoldDTO;
+import com.cart.cartproject.application.dto.requestDto.ProductDTO.UpdateProductDTO;
+import com.cart.cartproject.application.dto.responseDto.ProductDTO.ViewProductDTO;
 import com.cart.cartproject.domain.entity.Product;
 import com.cart.cartproject.external.ProductRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -20,54 +21,45 @@ public class ProductService {
     private final ProductRepository productRepository;
 
     public ResponseEntity<ViewProductDTO> getProduct(Long id) {
-        ViewProductDTO viewProductDTO = new ViewProductDTO();
-
         Optional<Product> optionalProduct = productRepository.findById(id);
-        if(optionalProduct.isPresent()){
-
+        if (optionalProduct.isPresent()) {
             Product product = optionalProduct.get();
-
+            ViewProductDTO viewProductDTO = new ViewProductDTO();
             viewProductDTO.setId(product.getId());
             viewProductDTO.setProductCode(product.getProductCode());
             viewProductDTO.setProductName(product.getProductName());
             viewProductDTO.setProductDescription(product.getProductDescription());
             viewProductDTO.setQuantity(product.getQuantity());
             viewProductDTO.setPrice(product.getPrice());
-
             return ResponseEntity.ok(viewProductDTO);
-        }else {
+        } else {
             return ResponseEntity.notFound().build();
         }
     }
 
     public ResponseEntity<List<ViewProductDTO>> getAllProduct() {
-        ViewProductDTO viewProductDTO = new ViewProductDTO();
-
         List<Product> products = productRepository.findAll();
-
         if (products.isEmpty()) {
-            return ResponseEntity.notFound().build(); // Return 404 if no products exist
+            return ResponseEntity.notFound().build();
         }
 
-        List<ViewProductDTO> productDTOs = products.stream().map(product -> {
-            ViewProductDTO dto = new ViewProductDTO();
-            dto.setId(product.getId());
-            dto.setProductCode(product.getProductCode());
-            dto.setProductName(product.getProductName());
-            dto.setProductDescription(product.getProductDescription());
-            dto.setQuantity(product.getQuantity());
-            dto.setPrice(product.getPrice());
-
-            return dto;
-
-        }).collect(Collectors.toList());
-
+        List<ViewProductDTO> productDTOs = new ArrayList<>();
+        for (Product product : products) {
+            ViewProductDTO viewProductDTO = new ViewProductDTO();
+            viewProductDTO.setId(product.getId());
+            viewProductDTO.setProductCode(product.getProductCode());
+            viewProductDTO.setProductName(product.getProductName());
+            viewProductDTO.setProductDescription(product.getProductDescription());
+            viewProductDTO.setQuantity(product.getQuantity());
+            viewProductDTO.setPrice(product.getPrice());
+            productDTOs.add(viewProductDTO);
+        }
         return ResponseEntity.ok(productDTOs);
     }
 
     public ResponseEntity<AddProductDTO> postProduct(AddProductDTO addProductDTO) {
-        if(productRepository.existsByProductCode(addProductDTO.getProductCode())){
-            return  ResponseEntity.status(409).body(null);
+        if (productRepository.existsByProductCode(addProductDTO.getProductCode())) {
+            return ResponseEntity.status(409).body(null);
         }
 
         Product product = new Product();
@@ -78,45 +70,67 @@ public class ProductService {
         product.setPrice(addProductDTO.getPrice());
         product.setProductStatus("Active");
 
-        try{
+        try {
             productRepository.save(product);
             return ResponseEntity.status(201).body(addProductDTO);
-        }catch (Exception e){
+        } catch (Exception e) {
             System.err.println("Error saving product: " + e.getMessage());
             return ResponseEntity.status(500).body(null);
         }
     }
 
-    public ResponseEntity<UpdateProductDTO> putProduct(UpdateProductDTO updateProductDTO) {
-        Optional<Product> optionalProduct = productRepository.findByProductCode(updateProductDTO.getProductCode());
-        if(optionalProduct.isPresent()){
-            Product product = optionalProduct.get();
-            product.setProductCode(updateProductDTO.getProductCode());
-            product.setProductName(updateProductDTO.getProductName());
-            product.setProductDescription(updateProductDTO.getProductDescription());
-            product.setQuantity(updateProductDTO.getQuantity());
-            product.setPrice(updateProductDTO.getPrice());
-            product.setProductStatus(updateProductDTO.getProductStatus());
+    
 
+    public ResponseEntity<HoldDTO> holdProduct(HoldDTO holdDTO) {
+        Optional<Product> optionalProduct = productRepository.findByProductCode(holdDTO.getProductCode());
+        if (optionalProduct.isPresent()) {
+            Product product = optionalProduct.get();
+            product.setProductStatus(holdDTO.getProductStatus());
             productRepository.save(product);
-            return ResponseEntity.status(201).body(null);
-        }
-        else {
+            return ResponseEntity.status(201).body(holdDTO);
+        } else {
             return ResponseEntity.notFound().build();
         }
     }
 
-    public ResponseEntity<HoldDTO> holdProduct(HoldDTO holdDTO) {
-        Optional<Product> optionalProduct = productRepository.findByProductCode(holdDTO.getProductCode());
+    public ResponseEntity<Void> deleteProduct(Long id) {
+        Optional<Product> optionalProduct = productRepository.findById(id);
+        if (optionalProduct.isPresent()) {
+            productRepository.delete(optionalProduct.get());
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
-        if(optionalProduct.isPresent()){
+    public ResponseEntity<UpdateProductDTO> putProduct(UpdateProductDTO updateProductDTO) {
+        Optional<Product> optionalProduct = productRepository.findById(updateProductDTO.getId());
+        if (optionalProduct.isPresent()) {
             Product product = optionalProduct.get();
-            product.setProductStatus(holdDTO.getProductStatus());
+
+            // Update fields if they are provided in the DTO
+            if (updateProductDTO.getProductCode() != null) {
+                product.setProductCode(updateProductDTO.getProductCode());
+            }
+            if (updateProductDTO.getProductName() != null) {
+                product.setProductName(updateProductDTO.getProductName());
+            }
+            if (updateProductDTO.getProductDescription() != null) {
+                product.setProductDescription(updateProductDTO.getProductDescription());
+            }
+            if (updateProductDTO.getQuantity() != null) {
+                product.setQuantity(updateProductDTO.getQuantity());
+            }
+            if (updateProductDTO.getPrice() != null) {
+                product.setPrice(updateProductDTO.getPrice());
+            }
+            if (updateProductDTO.getProductStatus() != null) {
+                product.setProductStatus(updateProductDTO.getProductStatus());
+            }
 
             productRepository.save(product);
-            return ResponseEntity.status(201).body(null);
-        }
-        else {
+            return ResponseEntity.status(200).body(updateProductDTO);
+        } else {
             return ResponseEntity.notFound().build();
         }
     }

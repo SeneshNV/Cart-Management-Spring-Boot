@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -28,8 +28,9 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
-    private String userRole;
+    @ManyToOne
+    @JoinColumn(name = "user_role_id", nullable = false)
+    private UserRole userRole;
 
     @Column(nullable = false)
     private String activeStatus;

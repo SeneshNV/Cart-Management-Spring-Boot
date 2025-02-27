@@ -1,4 +1,4 @@
-package com.cart.cartproject.application.dto.requestDto;
+package com.cart.cartproject.application.dto.requestDto.UserDTO;
 
 import lombok.Data;
 
@@ -7,4 +7,5 @@ public class CreateUserDTO {
     private String username;
     private String email;
     private String password;
+    private String userRoleCode;
 }

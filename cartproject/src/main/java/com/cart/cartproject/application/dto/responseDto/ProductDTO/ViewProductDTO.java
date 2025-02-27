@@ -1,4 +1,4 @@
-package com.cart.cartproject.application.dto.responseDto;
+package com.cart.cartproject.application.dto.responseDto.ProductDTO;
 
 import lombok.Data;
 

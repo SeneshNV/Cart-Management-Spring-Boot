@@ -1,4 +1,4 @@
-package com.cart.cartproject.application.dto.requestDto;
+package com.cart.cartproject.application.dto.requestDto.UserDTO;
 
 import lombok.Data;
 

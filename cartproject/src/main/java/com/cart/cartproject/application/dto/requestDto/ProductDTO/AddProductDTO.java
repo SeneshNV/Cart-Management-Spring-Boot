@@ -1,9 +1,9 @@
-package com.cart.cartproject.application.dto.requestDto;
+package com.cart.cartproject.application.dto.requestDto.ProductDTO;
 
 import lombok.Data;
 
 @Data
-public class UpdateProductDTO {
+public class AddProductDTO {
     private Long id;
     private String productCode;
     private String productName;
@@ -11,5 +11,5 @@ public class UpdateProductDTO {
     private String url;
     private Integer quantity;
     private Double price;
-    private String productStatus;
+
 }
