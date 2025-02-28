@@ -21,34 +21,28 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-
-                        .requestMatchers("/api/v1/**").permitAll()
-
                         .requestMatchers("/api/v1/user/signup").permitAll()
                         .requestMatchers("/api/v1/user/login").permitAll()
                         .requestMatchers("/api/v1/user/admin/login").permitAll()
                         .requestMatchers("/api/v1/user/admin/create").hasRole("ADMIN1")
-
-                        .requestMatchers("/api/v1/product/view/**").permitAll() // Buyers can view products
+                        .requestMatchers("/api/v1/product/view/**").permitAll()
                         .requestMatchers("/api/v1/product/add").hasAnyRole("ADMIN1", "ADMIN2")
                         .requestMatchers("/api/v1/product/update").hasAnyRole("ADMIN1", "ADMIN2")
                         .requestMatchers("/api/v1/product/hold").hasAnyRole("ADMIN1", "ADMIN2")
                         .requestMatchers("/api/v1/product/delete/**").hasAnyRole("ADMIN1", "ADMIN2")
-
                         .requestMatchers("/api/v1/cart/add").hasRole("BUYER")
                         .requestMatchers("/api/v1/cart/delete/**").hasRole("BUYER")
                         .requestMatchers("/api/v1/cart/me").hasRole("BUYER")
                         .requestMatchers("/api/v1/cart/all").hasAnyRole("ADMIN1", "ADMIN2")
                         .requestMatchers("/api/v1/cart/most-selected").hasAnyRole("ADMIN1", "ADMIN2")
-
-                        .anyRequest().authenticated() // Secure all other endpoints
+                        .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Use stateless sessions
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -10,6 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "user", indexes = @Index(name = "idx_username", columnList = "username", unique = true))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,10 +31,10 @@ public class User {
 
     @ManyToOne
     @JoinColumn(name = "user_role_id", nullable = false)
-    private UserRole userRole;
+    private UserRole userRoleCode;
 
     @Column(nullable = false)
-    private String activeStatus;
+    private boolean activeStatus; // Changed to boolean
 
     @Column(nullable = false)
     private String accountStatus;

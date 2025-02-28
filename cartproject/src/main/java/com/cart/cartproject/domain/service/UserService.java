@@ -10,6 +10,7 @@ import com.cart.cartproject.external.UserRepository;
 import com.cart.cartproject.external.UserRoleRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,8 +37,8 @@ public class UserService {
             viewUsersDTO.setId(user.getId());
             viewUsersDTO.setUsername(user.getUsername());
             viewUsersDTO.setEmail(user.getEmail());
-            viewUsersDTO.setUserRole(user.getUserRole().getUserRole());
-            viewUsersDTO.setActiveStatus(Boolean.parseBoolean(user.getActiveStatus()));
+            viewUsersDTO.setUserRole(user.getUserRoleCode().getUserRoleCode());
+//            viewUsersDTO.setActiveStatus(user.getActiveStatus());
             viewUsersDTO.setAccountStatus(user.getAccountStatus());
 
             return ResponseEntity.ok(viewUsersDTO);
@@ -47,33 +48,39 @@ public class UserService {
     }
 
     public ResponseEntity<CreateUserDTO> postSignup(CreateUserDTO createUserDTO) {
-        if (userRepository.existsByUsername(createUserDTO.getUsername())) {
-            return ResponseEntity.status(409).body(null);
-        }
-        if (userRepository.existsByEmail(createUserDTO.getEmail())) {
-            return ResponseEntity.status(409).body(null);
-        }
-
-        // Fetch the UserRole entity
-        UserRole userRole = userRoleRepository.findByUserRoleCode(createUserDTO.getUserRoleCode())
-                .orElseThrow(() -> new RuntimeException("User role not found: " + createUserDTO.getUserRoleCode()));
-
-        String hashedPassword = passwordEncoder.encode(createUserDTO.getPassword());
-
-        User user = new User();
-        user.setUsername(createUserDTO.getUsername());
-        user.setEmail(createUserDTO.getEmail());
-        user.setPassword(hashedPassword);
-        user.setUserRole(userRole); // Set the UserRole entity
-        user.setAccountStatus("Active");
-        user.setActiveStatus("true");
-
         try {
+            // Check if username exists
+            if (userRepository.existsByUsername(createUserDTO.getUsername())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(null);
+            }
+
+            // Check if email exists
+            if (userRepository.existsByEmail(createUserDTO.getEmail())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(null);
+            }
+
+            // Fetch the UserRole entity
+            UserRole userRole = userRoleRepository.findByUserRoleCode(createUserDTO.getUserRoleCode())
+                    .orElseThrow(() -> new RuntimeException("User role not found: " + createUserDTO.getUserRoleCode()));
+
+            // Create the user
+            User user = new User();
+            user.setUsername(createUserDTO.getUsername());
+            user.setEmail(createUserDTO.getEmail());
+            user.setPassword(passwordEncoder.encode(createUserDTO.getPassword()));
+            user.setUserRoleCode(userRole); // Set the UserRole entity
+            user.setActiveStatus(true);
+            user.setAccountStatus("Active");
+
+            // Save the user
             userRepository.save(user);
-            return ResponseEntity.status(201).body(createUserDTO);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(createUserDTO);
         } catch (Exception e) {
-            System.err.println("Error saving user: " + e.getMessage());
-            return ResponseEntity.status(500).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
         }
     }
 
@@ -96,9 +103,9 @@ public class UserService {
         user.setUsername(createUserDTO.getUsername());
         user.setEmail(createUserDTO.getEmail());
         user.setPassword(hashedPassword);
-        user.setUserRole(adminRole);
+        user.setUserRoleCode(adminRole);
         user.setAccountStatus("Active");
-        user.setActiveStatus("true");
+        user.setActiveStatus(true);
 
         try {
             userRepository.save(user);
@@ -137,25 +144,26 @@ public class UserService {
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
 
-            // Check if the user has the ADMIN role
-            if (!user.getUserRole().getUserRoleCode().equals("ADMIN")) {
-                return ResponseEntity.status(403).body(null); // Forbidden: User is not an admin
+            // Check if the user has ADMIN1 or ADMIN2 role
+            if (!user.getUserRoleCode().getUserRoleCode().equals("ADMIN1") &&
+                    !user.getUserRoleCode().getUserRoleCode().equals("ADMIN2")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
             }
 
-            // Validate password
             if (passwordEncoder.matches(loginUserDTO.getPassword(), user.getPassword())) {
-                String token = jwtUtil.generateToken(user.getEmail()); // Generate JWT token
+                String token = jwtUtil.generateToken(user.getEmail());
 
                 LoginUserDTO response = new LoginUserDTO();
                 response.setEmail(user.getEmail());
-                response.setPassword(token);
+                response.setPassword(token); // Consider renaming this to 'token'
 
                 return ResponseEntity.ok(response);
             } else {
-                return ResponseEntity.status(401).body(null); // Unauthorized: Invalid password
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
             }
         } else {
-            return ResponseEntity.status(404).body(null); // Not Found: User not found
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
+
     }
 }

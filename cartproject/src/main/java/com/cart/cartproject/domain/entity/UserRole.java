@@ -17,8 +17,8 @@ public class UserRole {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String userRoleCode; //ADMIN1, ADMIN2, BUYER
+    private String userRoleCode; // ADMIN1, ADMIN2, BUYER
 
     @Column(nullable = false, unique = true)
-    private String userRole; //Admin 1, Admin 2, Buyer
+    private String userRole; // Admin 1, Admin 2, Buyer
 }
