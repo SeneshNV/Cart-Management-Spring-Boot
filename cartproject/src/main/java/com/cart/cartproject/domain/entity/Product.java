@@ -34,10 +34,12 @@ public class Product {
     @Column(nullable = false)
     private Double price;
 
-    @Column(nullable = false)
-    private String productStatus;
-
     @ManyToOne
     @JoinColumn(nullable = false)
+    private ProductStatus productStatus;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     private User productAddedBy;
+
 }

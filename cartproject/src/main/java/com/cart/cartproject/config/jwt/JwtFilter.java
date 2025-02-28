@@ -1,5 +1,6 @@
 package com.cart.cartproject.config.jwt;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -7,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -15,9 +17,10 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 @Component
-public class JwtFilter extends OncePerRequestFilter{
+public class JwtFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -37,11 +40,15 @@ public class JwtFilter extends OncePerRequestFilter{
             }
 
             if (token != null && jwtUtil.validateToken(token)) {
-                String email = jwtUtil.extractClaims(token).getSubject();
+                Claims claims = jwtUtil.extractClaims(token);
+                String email = claims.getSubject();
+                String role = claims.get("role", String.class); // Ensure the role is extracted
 
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(email, null, new ArrayList<>());
+                            new UsernamePasswordAuthenticationToken(email, null,
+                                    Collections.singletonList(new SimpleGrantedAuthority(role)));
+
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }

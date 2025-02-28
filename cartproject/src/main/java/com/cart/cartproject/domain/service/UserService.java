@@ -38,7 +38,6 @@ public class UserService {
         throw new RuntimeException("User not found");
     }
 
-
     private boolean isValidPassword(String password) {
         return password != null && password.length() >= 8;
     }
@@ -126,36 +125,34 @@ public class UserService {
 
             System.out.println("Logged-in user role: " + loggedInUserRole);
 
-            // Check if the logged-in user is ADMIN1
+
             if (!loggedInUserRole.equals("ADMIN1")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only ADMIN1 can create admin accounts");
             }
 
-            // Validate email format
+
             if (!isValidEmail(createUserDTO.getEmail())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid email format");
             }
 
-            // Validate password length
+
             if (!isValidPassword(createUserDTO.getPassword())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password must be at least 8 characters long");
             }
 
-            // Check if username already exists
+
             if (userRepository.existsByUsername(createUserDTO.getUsername())) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
             }
 
-            // Check if email already exists
+
             if (userRepository.existsByEmail(createUserDTO.getEmail())) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists");
             }
 
-            // Fetch admin role
             UserRole adminRole = userRoleRepository.findByUserRoleCode(createUserDTO.getUserRoleCode())
                     .orElseThrow(() -> new RuntimeException("Admin role not found"));
 
-            // Create and save admin user
             User user = new User();
             user.setUsername(createUserDTO.getUsername());
             user.setEmail(createUserDTO.getEmail());
@@ -191,7 +188,7 @@ public class UserService {
 
 
                 if (passwordEncoder.matches(loginUserDTO.getPassword(), user.getPassword())) {
-                    String token = jwtUtil.generateToken(user.getEmail());
+                    String token = jwtUtil.generateToken(user.getEmail(), "BUYER");
 
                     // Set the JWT token in a cookie
                     Cookie cookie = new Cookie("jwt", token);
@@ -213,35 +210,16 @@ public class UserService {
 
     public ResponseEntity<String> postAdminLogin(LoginUserDTO loginUserDTO, HttpServletResponse response) {
         try {
-
-            if (!isValidEmail(loginUserDTO.getEmail())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid email format");
-            }
-
             Optional<User> optionalUser = userRepository.findByEmail(loginUserDTO.getEmail());
-
             if (optionalUser.isPresent()) {
                 User user = optionalUser.get();
-
-
-                if (!user.getUserRoleCode().getUserRoleCode().equals("ADMIN1") &&
-                        !user.getUserRoleCode().getUserRoleCode().equals("ADMIN2")) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only ADMIN roles are allowed for admin login");
-                }
-
-
-                if (passwordEncoder.matches(loginUserDTO.getPassword(), user.getPassword())) {
-                    String token = jwtUtil.generateToken(user.getEmail());
-
-
-                    Cookie cookie = new Cookie("jwt", token);
-                    cookie.setHttpOnly(true);
-                    cookie.setPath("/");
-                    response.addCookie(cookie);
-
+                if (user.getUserRoleCode().getUserRoleCode().equals("ADMIN1") ||
+                        user.getUserRoleCode().getUserRoleCode().equals("ADMIN2")) {
+                    String token = jwtUtil.generateToken(user.getEmail(), user.getUserRoleCode().getUserRoleCode());
+                    // Set the token in a cookie or response header
                     return ResponseEntity.ok("Admin login successful");
                 } else {
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only ADMIN roles are allowed for admin login");
                 }
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Admin not found");

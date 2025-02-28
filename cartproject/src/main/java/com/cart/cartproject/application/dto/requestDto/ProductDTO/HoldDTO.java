@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class HoldDTO {
     private String productCode;
-    private String productStatus;
+    private String productStatusCode;
 }

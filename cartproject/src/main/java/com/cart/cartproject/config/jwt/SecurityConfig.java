@@ -27,10 +27,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/user/login").permitAll()
                         .requestMatchers("/api/v1/user/logout").permitAll()
                         .requestMatchers("/api/v1/user/admin/login").permitAll()
+                        .requestMatchers("/api/v1/user/admin/create").hasRole("ADMIN1")
 
-//                        .requestMatchers("/api/v1/user/admin/create").hasRole("ADMIN1")
-                        .requestMatchers("/api/v1/user/admin/create").permitAll()
-
+                        .requestMatchers("/api/v1/product/**").permitAll()
                         .requestMatchers("/api/v1/product/view/**").permitAll()
                         .requestMatchers("/api/v1/product/add").hasAnyRole("ADMIN1", "ADMIN2")
                         .requestMatchers("/api/v1/product/update").hasAnyRole("ADMIN1", "ADMIN2")
