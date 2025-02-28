@@ -34,7 +34,7 @@ public class User {
     private UserRole userRoleCode;
 
     @Column(nullable = false)
-    private boolean activeStatus; // Changed to boolean
+    private boolean activeStatus;
 
     @Column(nullable = false)
     private String accountStatus;

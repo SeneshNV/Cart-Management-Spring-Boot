@@ -8,6 +8,8 @@ import com.cart.cartproject.domain.entity.User;
 import com.cart.cartproject.domain.entity.UserRole;
 import com.cart.cartproject.external.UserRepository;
 import com.cart.cartproject.external.UserRoleRepository;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,13 +27,13 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserRoleRepository userRoleRepository; // Add this repository
+    private final UserRoleRepository userRoleRepository;
 
     public ResponseEntity<ViewUsersDTO> getUsers(Long id) {
         ViewUsersDTO viewUsersDTO = new ViewUsersDTO();
 
         Optional<User> optionalUser = userRepository.findById(id);
-        if(optionalUser.isPresent()){
+        if (optionalUser.isPresent()) {
             User user = optionalUser.get();
 
             viewUsersDTO.setId(user.getId());
@@ -42,39 +44,43 @@ public class UserService {
             viewUsersDTO.setAccountStatus(user.getAccountStatus());
 
             return ResponseEntity.ok(viewUsersDTO);
-        }else{
+        } else {
             return ResponseEntity.notFound().build();
         }
     }
 
     public ResponseEntity<CreateUserDTO> postSignup(CreateUserDTO createUserDTO) {
         try {
-            // Check if username exists
+            // Check if the user is a BUYER
+            if (!createUserDTO.getUserRoleCode().equals("BUYER")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+
             if (userRepository.existsByUsername(createUserDTO.getUsername())) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body(null);
             }
 
-            // Check if email exists
+
             if (userRepository.existsByEmail(createUserDTO.getEmail())) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body(null);
             }
 
-            // Fetch the UserRole entity
+
             UserRole userRole = userRoleRepository.findByUserRoleCode(createUserDTO.getUserRoleCode())
                     .orElseThrow(() -> new RuntimeException("User role not found: " + createUserDTO.getUserRoleCode()));
 
-            // Create the user
+
             User user = new User();
             user.setUsername(createUserDTO.getUsername());
             user.setEmail(createUserDTO.getEmail());
             user.setPassword(passwordEncoder.encode(createUserDTO.getPassword()));
-            user.setUserRoleCode(userRole); // Set the UserRole entity
+            user.setUserRoleCode(userRole);
             user.setActiveStatus(true);
             user.setAccountStatus("Active");
 
-            // Save the user
+
             userRepository.save(user);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(createUserDTO);
@@ -95,8 +101,7 @@ public class UserService {
         String hashedPassword = passwordEncoder.encode(createUserDTO.getPassword());
         System.out.println("Hashed Password: " + hashedPassword);
 
-        // Ensure only admin accounts are created via this endpoint
-        UserRole adminRole = (UserRole) userRoleRepository.findByUserRoleCode("ADMIN1")
+        UserRole adminRole = userRoleRepository.findByUserRoleCode(createUserDTO.getUserRoleCode())
                 .orElseThrow(() -> new RuntimeException("Admin role not found"));
 
         User user = new User();
@@ -116,35 +121,46 @@ public class UserService {
         }
     }
 
-    public ResponseEntity<LoginUserDTO> postLogin(LoginUserDTO loginUserDTO) {
+    public ResponseEntity<LoginUserDTO> postLogin(LoginUserDTO loginUserDTO, HttpServletResponse response) {
         Optional<User> optionalUser = userRepository.findByEmail(loginUserDTO.getEmail());
 
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
 
+
+            if (!user.getUserRoleCode().getUserRoleCode().equals("BUYER")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+
             if (passwordEncoder.matches(loginUserDTO.getPassword(), user.getPassword())) {
-                String token = jwtUtil.generateToken(user.getEmail()); // Generate JWT token
+                String token = jwtUtil.generateToken(user.getEmail());
 
-                LoginUserDTO response = new LoginUserDTO();
-                response.setEmail(user.getEmail());
-                response.setPassword(token);
+                // Set the JWT token in a cookie
+                Cookie cookie = new Cookie("jwt", token);
+                cookie.setHttpOnly(true);
+                cookie.setPath("/");
+                response.addCookie(cookie);
 
-                return ResponseEntity.ok(response);
+                LoginUserDTO loginResponse = new LoginUserDTO();
+                loginResponse.setEmail(user.getEmail());
+                loginResponse.setPassword(token);
+
+                return ResponseEntity.ok(loginResponse);
             } else {
-                return ResponseEntity.status(401).body(null);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
             }
         } else {
-            return ResponseEntity.status(404).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 
-    public ResponseEntity<LoginUserDTO> postAdminLogin(LoginUserDTO loginUserDTO) {
+    public ResponseEntity<LoginUserDTO> postAdminLogin(LoginUserDTO loginUserDTO, HttpServletResponse response) {
         Optional<User> optionalUser = userRepository.findByEmail(loginUserDTO.getEmail());
 
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
 
-            // Check if the user has ADMIN1 or ADMIN2 role
+            // Check if the ADMIN1 or ADMIN2
             if (!user.getUserRoleCode().getUserRoleCode().equals("ADMIN1") &&
                     !user.getUserRoleCode().getUserRoleCode().equals("ADMIN2")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
@@ -153,17 +169,22 @@ public class UserService {
             if (passwordEncoder.matches(loginUserDTO.getPassword(), user.getPassword())) {
                 String token = jwtUtil.generateToken(user.getEmail());
 
-                LoginUserDTO response = new LoginUserDTO();
-                response.setEmail(user.getEmail());
-                response.setPassword(token); // Consider renaming this to 'token'
+                // Set the JWT token in a cookie
+                Cookie cookie = new Cookie("jwt", token);
+                cookie.setHttpOnly(true);
+                cookie.setPath("/");
+                response.addCookie(cookie);
 
-                return ResponseEntity.ok(response);
+                LoginUserDTO loginResponse = new LoginUserDTO();
+                loginResponse.setEmail(user.getEmail());
+                loginResponse.setPassword(token);
+
+                return ResponseEntity.ok(loginResponse);
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
             }
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-
     }
 }

@@ -108,7 +108,7 @@ public class ProductService {
         if (optionalProduct.isPresent()) {
             Product product = optionalProduct.get();
 
-            // Update fields if they are provided in the DTO
+
             if (updateProductDTO.getProductCode() != null) {
                 product.setProductCode(updateProductDTO.getProductCode());
             }

@@ -18,40 +18,40 @@ import java.util.List;
 public class ProductController {
     private ProductService productService;
 
-    // Buyers can view products
+    // Buyers view products
     @GetMapping("/view/{id}")
     public ResponseEntity<ViewProductDTO> getProduct(@PathVariable Long id) {
         return productService.getProduct(id);
     }
 
-    // Buyers can view all products
+    // Buyers view all products
     @GetMapping("/view")
     public ResponseEntity<List<ViewProductDTO>> getAllProduct() {
         return productService.getAllProduct();
     }
 
-    // Only admins (admin1, admin2) can add products
+    // Only admins (admin1, admin2) add products
     @PostMapping("/add")
     @PreAuthorize("hasAnyRole('ADMIN1', 'ADMIN2')")
     public ResponseEntity<AddProductDTO> addProduct(@RequestBody AddProductDTO addProductDTO) {
         return productService.postProduct(addProductDTO);
     }
 
-    // Only admins (admin1, admin2) can update products
+    // Only admins (admin1, admin2) update products
     @PutMapping("/update")
     @PreAuthorize("hasAnyRole('ADMIN1', 'ADMIN2')")
     public ResponseEntity<UpdateProductDTO> updateProduct(@RequestBody UpdateProductDTO updateProductDTO) {
         return productService.putProduct(updateProductDTO);
     }
 
-    // Only admins (admin1, admin2) can hold products
+    // Only admins (admin1, admin2) hold products
     @PutMapping("/hold")
     @PreAuthorize("hasAnyRole('ADMIN1', 'ADMIN2')")
     public ResponseEntity<HoldDTO> holdProduct(@RequestBody HoldDTO holdDTO) {
         return productService.holdProduct(holdDTO);
     }
 
-    // Only admins (admin1, admin2) can delete products
+    // Only admins (admin1, admin2) delete products
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasAnyRole('ADMIN1', 'ADMIN2')")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {

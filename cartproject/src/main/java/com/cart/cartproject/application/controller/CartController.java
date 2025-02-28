@@ -17,28 +17,28 @@ import java.util.List;
 public class CartController {
     private CartService cartService;
 
-    // Buyers can add products to their cart
+
     @PostMapping("/add")
     @PreAuthorize("hasRole('BUYER')")
     public ResponseEntity<AddToCartDTO> addToCart(@RequestBody AddToCartDTO addToCartDTO) {
         return cartService.addToCart(addToCartDTO);
     }
 
-    // Buyers can delete products from their cart
+    // Buyers can delete cart
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('BUYER')")
     public ResponseEntity<Void> deleteCart(@PathVariable Long id) {
         return cartService.deleteCart(id);
     }
 
-    // Admins can view all carts
+    // Admins view all carts
     @GetMapping("/all")
     @PreAuthorize("hasAnyRole('ADMIN1', 'ADMIN2')")
     public ResponseEntity<List<ViewCartDTO>> viewAllCarts() {
         return cartService.getAllCarts();
     }
 
-    // Buyers can view their own cart
+    // Buyers cart
     @GetMapping("/me")
     @PreAuthorize("hasRole('BUYER')")
     public ResponseEntity<List<ViewCartDTO>> viewUserCart() {
