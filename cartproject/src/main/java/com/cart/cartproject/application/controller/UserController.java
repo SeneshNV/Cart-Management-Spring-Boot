@@ -20,32 +20,32 @@ public class UserController {
     private UserService userService;
 
     @GetMapping("/view/{id}")
-    public ResponseEntity<ViewUsersDTO> getUsers(@PathVariable Long id) {
+    public ResponseEntity<?> getUsers(@PathVariable Long id) {
         return userService.getUsers(id);
     }
 
     // Buyer signup
     @PostMapping("/signup")
-    public ResponseEntity<CreateUserDTO> signup(@RequestBody CreateUserDTO createUserDTO) {
+    public ResponseEntity<String> signup(@RequestBody CreateUserDTO createUserDTO) {
         return userService.postSignup(createUserDTO);
     }
 
     // Buyer login
     @PostMapping("/login")
-    public ResponseEntity<LoginUserDTO> login(@RequestBody LoginUserDTO loginUserDTO, HttpServletResponse response) {
+    public ResponseEntity<String> login(@RequestBody LoginUserDTO loginUserDTO, HttpServletResponse response) {
         return userService.postLogin(loginUserDTO, response);
     }
 
     // Admin login
     @PostMapping("/admin/login")
-    public ResponseEntity<LoginUserDTO> adminLogin(@RequestBody LoginUserDTO loginUserDTO, HttpServletResponse response) {
+    public ResponseEntity<String> adminLogin(@RequestBody LoginUserDTO loginUserDTO, HttpServletResponse response) {
         return userService.postAdminLogin(loginUserDTO, response);
     }
 
     // Private endpoint for admin creation
     @PostMapping("/admin/create")
-    @PreAuthorize("hasAnyRole('ADMIN1')")
-    public ResponseEntity<CreateUserDTO> createAdmin(@RequestBody CreateUserDTO createUserDTO) {
+//    @PreAuthorize("hasRole('ADMIN1')")
+    public ResponseEntity<String> createAdmin(@RequestBody CreateUserDTO createUserDTO) {
         return userService.createAdmin(createUserDTO);
     }
 
@@ -61,5 +61,4 @@ public class UserController {
 
         return ResponseEntity.ok("Logged out successfully");
     }
-
 }
