@@ -2,12 +2,14 @@ package com.cart.cartproject.domain.service;
 
 import com.cart.cartproject.application.dto.requestDto.UserDTO.CreateUserDTO;
 import com.cart.cartproject.application.dto.requestDto.UserDTO.LoginUserDTO;
+import com.cart.cartproject.application.dto.responseDto.ApiResponse;
 import com.cart.cartproject.application.dto.responseDto.UserDTO.ViewUsersDTO;
 import com.cart.cartproject.config.jwt.JwtUtil;
 import com.cart.cartproject.domain.entity.User;
 import com.cart.cartproject.domain.entity.UserRole;
 import com.cart.cartproject.external.UserRepository;
 import com.cart.cartproject.external.UserRoleRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -30,74 +32,63 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRoleRepository userRoleRepository;
 
-    public String getLoggedInUserRole(String email) {
-        Optional<User> optionalUser = userRepository.findByEmail(email);
-        if (optionalUser.isPresent()) {
-            return optionalUser.get().getUserRoleCode().getUserRoleCode();
-        }
-        throw new RuntimeException("User not found");
-    }
-
     private boolean isValidPassword(String password) {
         return password != null && password.length() >= 8;
     }
-
 
     private boolean isValidEmail(String email) {
         String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
         return email != null && email.matches(emailRegex);
     }
 
-    public ResponseEntity<ViewUsersDTO> getUsers(Long id) {
-        ViewUsersDTO viewUsersDTO = new ViewUsersDTO();
-
+    public ResponseEntity<ApiResponse> getUsers(Long id) {
         Optional<User> optionalUser = userRepository.findById(id);
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
-
+            ViewUsersDTO viewUsersDTO = new ViewUsersDTO();
             viewUsersDTO.setId(user.getId());
             viewUsersDTO.setUsername(user.getUsername());
             viewUsersDTO.setEmail(user.getEmail());
             viewUsersDTO.setUserRole(user.getUserRoleCode().getUserRoleCode());
             viewUsersDTO.setAccountStatus(user.getAccountStatus());
 
-            return ResponseEntity.ok(viewUsersDTO);
+            ApiResponse response = new ApiResponse("User retrieved successfully", viewUsersDTO, "success");
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            ApiResponse response = new ApiResponse("User not found", null, "error");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
 
-    public ResponseEntity<String> postSignup(CreateUserDTO createUserDTO) {
+    public ResponseEntity<ApiResponse> postSignup(CreateUserDTO createUserDTO) {
         try {
-
             if (!isValidEmail(createUserDTO.getEmail())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid email format");
+                ApiResponse response = new ApiResponse("Invalid email format", null, "error");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
-
 
             if (!isValidPassword(createUserDTO.getPassword())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password must be at least 8 characters long");
+                ApiResponse response = new ApiResponse("Password must be at least 8 characters long", null, "error");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
-
 
             if (!createUserDTO.getUserRoleCode().equals("BUYER")) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only BUYER role is allowed for signup");
+                ApiResponse response = new ApiResponse("Only BUYER role is allowed for signup", null, "error");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-
 
             if (userRepository.existsByUsername(createUserDTO.getUsername())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
+                ApiResponse response = new ApiResponse("Username already exists", null, "error");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
             }
-
 
             if (userRepository.existsByEmail(createUserDTO.getEmail())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists");
+                ApiResponse response = new ApiResponse("Email already exists", null, "error");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
             }
-
 
             UserRole userRole = userRoleRepository.findByUserRoleCode(createUserDTO.getUserRoleCode())
                     .orElseThrow(() -> new RuntimeException("User role not found: " + createUserDTO.getUserRoleCode()));
-
 
             User user = new User();
             user.setUsername(createUserDTO.getUsername());
@@ -109,45 +100,36 @@ public class UserService {
 
             userRepository.save(user);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
+            ApiResponse response = new ApiResponse("User registered successfully", null, "success");
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+            ApiResponse response = new ApiResponse("An error occurred: " + e.getMessage(), null, "error");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    public ResponseEntity<String> createAdmin(CreateUserDTO createUserDTO) {
+    public ResponseEntity<ApiResponse> createAdmin(CreateUserDTO createUserDTO) {
         try {
-            // Get the email of currently log
             String loggedInUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
 
-            // Fetch the logged-in user's role
-            String loggedInUserRole = getLoggedInUserRole(loggedInUserEmail);
-
-            System.out.println("Logged-in user role: " + loggedInUserRole);
-
-
-            if (!loggedInUserRole.equals("ADMIN1")) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only ADMIN1 can create admin accounts");
-            }
-
-
             if (!isValidEmail(createUserDTO.getEmail())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid email format");
+                ApiResponse response = new ApiResponse("Invalid email format", null, "error");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
-
 
             if (!isValidPassword(createUserDTO.getPassword())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password must be at least 8 characters long");
+                ApiResponse response = new ApiResponse("Password must be at least 8 characters long", null, "error");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
-
 
             if (userRepository.existsByUsername(createUserDTO.getUsername())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
+                ApiResponse response = new ApiResponse("Username already exists", null, "error");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
             }
 
-
             if (userRepository.existsByEmail(createUserDTO.getEmail())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists");
+                ApiResponse response = new ApiResponse("Email already exists", null, "error");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
             }
 
             UserRole adminRole = userRoleRepository.findByUserRoleCode(createUserDTO.getUserRoleCode())
@@ -163,17 +145,19 @@ public class UserService {
 
             userRepository.save(user);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body("Admin created successfully");
+            ApiResponse response = new ApiResponse("Admin created successfully", null, "success");
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+            ApiResponse response = new ApiResponse("An error occurred: " + e.getMessage(), null, "error");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    public ResponseEntity<String> postLogin(LoginUserDTO loginUserDTO, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse> postLogin(LoginUserDTO loginUserDTO, HttpServletResponse response) {
         try {
-
             if (!isValidEmail(loginUserDTO.getEmail())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid email format");
+                ApiResponse apiResponse = new ApiResponse("Invalid email format", null, "error");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
             }
 
             Optional<User> optionalUser = userRepository.findByEmail(loginUserDTO.getEmail());
@@ -181,11 +165,10 @@ public class UserService {
             if (optionalUser.isPresent()) {
                 User user = optionalUser.get();
 
-
                 if (!user.getUserRoleCode().getUserRoleCode().equals("BUYER")) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only BUYER role is allowed for login");
+                    ApiResponse apiResponse = new ApiResponse("Only BUYER role is allowed for login", null, "error");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiResponse);
                 }
-
 
                 if (passwordEncoder.matches(loginUserDTO.getPassword(), user.getPassword())) {
                     String token = jwtUtil.generateToken(user.getEmail(), "BUYER");
@@ -194,38 +177,55 @@ public class UserService {
                     Cookie cookie = new Cookie("jwt", token);
                     cookie.setHttpOnly(true);
                     cookie.setPath("/");
+                    cookie.setSecure(true);
                     response.addCookie(cookie);
 
-                    return ResponseEntity.ok("Login successful");
+                    ApiResponse apiResponse = new ApiResponse("Login successful", null, "success");
+                    return ResponseEntity.ok(apiResponse);
                 } else {
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password");
+                    ApiResponse apiResponse = new ApiResponse("Invalid password", null, "error");
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiResponse);
                 }
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+                ApiResponse apiResponse = new ApiResponse("User not found", null, "error");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+            ApiResponse apiResponse = new ApiResponse("An error occurred: " + e.getMessage(), null, "error");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
         }
     }
 
-    public ResponseEntity<String> postAdminLogin(LoginUserDTO loginUserDTO, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse> postAdminLogin(LoginUserDTO loginUserDTO, HttpServletResponse response) {
         try {
             Optional<User> optionalUser = userRepository.findByEmail(loginUserDTO.getEmail());
             if (optionalUser.isPresent()) {
                 User user = optionalUser.get();
                 if (user.getUserRoleCode().getUserRoleCode().equals("ADMIN1") ||
                         user.getUserRoleCode().getUserRoleCode().equals("ADMIN2")) {
+
                     String token = jwtUtil.generateToken(user.getEmail(), user.getUserRoleCode().getUserRoleCode());
-                    // Set the token in a cookie or response header
-                    return ResponseEntity.ok("Admin login successful");
+
+                    // Set the JWT token in a cookie
+                    Cookie cookie = new Cookie("jwt", token);
+                    cookie.setHttpOnly(true);
+                    cookie.setPath("/");
+                    cookie.setSecure(true);
+                    response.addCookie(cookie);
+
+                    ApiResponse apiResponse = new ApiResponse("Admin login successful", null, "success");
+                    return ResponseEntity.ok(apiResponse);
                 } else {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only ADMIN roles are allowed for admin login");
+                    ApiResponse apiResponse = new ApiResponse("Only ADMIN roles are allowed for admin login", null, "error");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiResponse);
                 }
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Admin not found");
+                ApiResponse apiResponse = new ApiResponse("Admin not found", null, "error");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+            ApiResponse apiResponse = new ApiResponse("An error occurred: " + e.getMessage(), null, "error");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
         }
     }
 }

@@ -39,10 +39,15 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
             }
 
+
+
             if (token != null && jwtUtil.validateToken(token)) {
                 Claims claims = jwtUtil.extractClaims(token);
                 String email = claims.getSubject();
-                String role = claims.get("role", String.class); // Ensure the role is extracted
+
+
+
+                String role = "ROLE_" + claims.get("role", String.class);
 
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UsernamePasswordAuthenticationToken authentication =
@@ -51,7 +56,13 @@ public class JwtFilter extends OncePerRequestFilter {
 
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                    // Log the role being set in the SecurityContextHolder
+                    logger.info("SecurityContextHolder role: " +
+                            SecurityContextHolder.getContext().getAuthentication().getAuthorities());
                 }
+
+            logger.info("Extracted role: " + role);
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication: {}", e);

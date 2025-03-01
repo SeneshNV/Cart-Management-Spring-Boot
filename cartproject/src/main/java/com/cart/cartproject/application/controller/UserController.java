@@ -3,6 +3,7 @@ package com.cart.cartproject.application.controller;
 
 import com.cart.cartproject.application.dto.requestDto.UserDTO.CreateUserDTO;
 import com.cart.cartproject.application.dto.requestDto.UserDTO.LoginUserDTO;
+import com.cart.cartproject.application.dto.responseDto.ApiResponse;
 import com.cart.cartproject.application.dto.responseDto.UserDTO.ViewUsersDTO;
 import com.cart.cartproject.domain.service.UserService;
 import jakarta.servlet.http.Cookie;
@@ -26,26 +27,26 @@ public class UserController {
 
     // Buyer signup
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody CreateUserDTO createUserDTO) {
+    public ResponseEntity<ApiResponse> signup(@RequestBody CreateUserDTO createUserDTO) {
         return userService.postSignup(createUserDTO);
     }
 
     // Buyer login
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginUserDTO loginUserDTO, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse> login(@RequestBody LoginUserDTO loginUserDTO, HttpServletResponse response) {
         return userService.postLogin(loginUserDTO, response);
     }
 
     // Admin login
     @PostMapping("/admin/login")
-    public ResponseEntity<String> adminLogin(@RequestBody LoginUserDTO loginUserDTO, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse> adminLogin(@RequestBody LoginUserDTO loginUserDTO, HttpServletResponse response) {
         return userService.postAdminLogin(loginUserDTO, response);
     }
 
     // Private endpoint for admin creation
     @PostMapping("/admin/create")
-//    @PreAuthorize("hasRole('ADMIN1')")
-    public ResponseEntity<String> createAdmin(@RequestBody CreateUserDTO createUserDTO) {
+    @PreAuthorize("hasRole('ADMIN1')")
+    public ResponseEntity<ApiResponse> createAdmin(@RequestBody CreateUserDTO createUserDTO) {
         return userService.createAdmin(createUserDTO);
     }
 
