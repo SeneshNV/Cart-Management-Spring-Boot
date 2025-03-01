@@ -45,10 +45,10 @@ public class ProductService {
     }
 
     // View all products
-    public ResponseEntity<?> getAllProduct() {
+    public ResponseEntity<List<ViewProductDTO>> getAllProduct() {
         List<Product> products = productRepository.findAll();
         if (products.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No products found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         List<ViewProductDTO> productDTOs = new ArrayList<>();
@@ -67,7 +67,6 @@ public class ProductService {
 
     // Add a new product
     public ResponseEntity<String> postProduct(AddProductDTO addProductDTO) {
-
         // Validate product code
         if (addProductDTO.getProductCode() == null || addProductDTO.getProductCode().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Product code is required");
@@ -99,17 +98,11 @@ public class ProductService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found");
         }
 
-        User user = userRepository.findById(addProductDTO.getProductAddedBy())
-                .orElseThrow(
-                        () -> new RuntimeException("Product Add by")
-                );
+        User user = optionalUser.get();
 
-        if (user.getUserRoleCode().getUserRoleCode().equals("BUYER")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only BUYER role is allowed for add product");
-        }
-
-        ProductStatus productStatus = productStatusRepository.findByproductStatusCode(addProductDTO.getProductStatusCode())
-                .orElseThrow(() -> new RuntimeException("Product code not found"));
+        // Fetch the ProductStatus entity
+        ProductStatus productStatus = productStatusRepository.findByproductStatusCode(addProductDTO.getProductStatus())
+                .orElseThrow(() -> new RuntimeException("Product status not found: " + addProductDTO.getProductStatus()));
 
         // Create and save the product
         Product product = new Product();
@@ -119,8 +112,8 @@ public class ProductService {
         product.setUrl(addProductDTO.getUrl());
         product.setQuantity(addProductDTO.getQuantity());
         product.setPrice(addProductDTO.getPrice());
-        product.setProductStatus(productStatus);
-        product.setProductAddedBy(user);
+        product.setProductStatus(productStatus); // Set the ProductStatus entity
+        product.setProductAddedBy(user); // Set the User entity
 
         try {
             productRepository.save(product);
@@ -145,8 +138,8 @@ public class ProductService {
 
         Product product = optionalProduct.get();
 
-        ProductStatus productStatus = productStatusRepository.findByproductStatusCode(updateProductDTO.getProductStatusCode())
-                .orElseThrow(() -> new RuntimeException("Product code not found"));
+        ProductStatus productStatus = productStatusRepository.findByproductStatusCode(updateProductDTO.getProductStatus())
+                .orElseThrow(() -> new RuntimeException("Product status not found"));
 
         // Update fields if provided
         if (updateProductDTO.getProductCode() != null) {
@@ -164,7 +157,7 @@ public class ProductService {
         if (updateProductDTO.getPrice() != null) {
             product.setPrice(updateProductDTO.getPrice());
         }
-        if (updateProductDTO.getProductStatusCode() != null) {
+        if (updateProductDTO.getProductStatus() != null) {
             product.setProductStatus(productStatus);
         }
 
@@ -190,7 +183,7 @@ public class ProductService {
         }
 
         ProductStatus productStatus = productStatusRepository.findByproductStatusCode(holdDTO.getProductStatusCode())
-                .orElseThrow(() -> new RuntimeException("Product code not found"));
+                .orElseThrow(() -> new RuntimeException("Product status not found"));
 
         Product product = optionalProduct.get();
         product.setProductStatus(productStatus);

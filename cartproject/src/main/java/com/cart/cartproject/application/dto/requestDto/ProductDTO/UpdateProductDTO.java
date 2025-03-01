@@ -10,6 +10,6 @@ public class UpdateProductDTO {
     private String productDescription;
     private Integer quantity;
     private Double price;
-    private String productStatusCode;
+    private String productStatus;
     private Long productAddedBy;
 }

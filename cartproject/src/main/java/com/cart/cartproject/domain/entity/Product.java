@@ -35,11 +35,10 @@ public class Product {
     private Double price;
 
     @ManyToOne
-    @JoinColumn(nullable = false)
+    @JoinColumn(name = "product_status_id", nullable = false)
     private ProductStatus productStatus;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User productAddedBy;
-
 }

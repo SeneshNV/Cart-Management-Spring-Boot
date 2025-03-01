@@ -21,48 +21,38 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping("/test")
-    public String test(){
+    public String test() {
         return "Testing";
     }
 
-    // Buyers view product
-//    @GetMapping("/view/{id}")
-//    public ResponseEntity<String> getProduct(@PathVariable Long id) {
-//        return productService.getProduct(id);
-//    }
-
     // Buyers view all products
     @GetMapping("/view")
-    public ResponseEntity<?> getAllProduct() {
+    public ResponseEntity<List<ViewProductDTO>> getAllProduct() {
         return productService.getAllProduct();
     }
 
-    // Only admins (admin1, admin2) add products
+    // Only admins (ADMIN1, ADMIN2) can add products
     @PostMapping("/add")
-//    @PreAuthorize("hasAnyRole('ADMIN1', 'ADMIN2')")
+    @PreAuthorize("hasAnyRole('ADMIN1', 'ADMIN2')")
     public ResponseEntity<String> addProduct(@RequestBody AddProductDTO addProductDTO) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("Authenticated User: " + authentication.getName());
-        System.out.println("Authenticated Roles: " + authentication.getAuthorities());
-
         return productService.postProduct(addProductDTO);
     }
 
-    // Only admins (admin1, admin2) update products
+    // Only admins (ADMIN1, ADMIN2) can update products
     @PutMapping("/update")
     @PreAuthorize("hasAnyRole('ADMIN1', 'ADMIN2')")
     public ResponseEntity<String> updateProduct(@RequestBody UpdateProductDTO updateProductDTO) {
         return productService.putProduct(updateProductDTO);
     }
 
-    // Only admins (admin1, admin2) hold products
+    // Only admins (ADMIN1, ADMIN2) can hold products
     @PutMapping("/hold")
     @PreAuthorize("hasAnyRole('ADMIN1', 'ADMIN2')")
     public ResponseEntity<String> holdProduct(@RequestBody HoldDTO holdDTO) {
         return productService.holdProduct(holdDTO);
     }
 
-    // Only admins (admin1, admin2) delete products
+    // Only admins (ADMIN1, ADMIN2) can delete products
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasAnyRole('ADMIN1', 'ADMIN2')")
     public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
