@@ -1,7 +1,6 @@
 package com.cart.cartproject.domain.service;
 
 import com.cart.cartproject.application.dto.requestDto.ProductDTO.AddProductDTO;
-import com.cart.cartproject.application.dto.requestDto.ProductDTO.HoldDTO;
 import com.cart.cartproject.application.dto.requestDto.ProductDTO.UpdateProductDTO;
 import com.cart.cartproject.application.dto.responseDto.ProductDTO.ViewProductDTO;
 import com.cart.cartproject.domain.entity.Product;
@@ -60,6 +59,7 @@ public class ProductService {
             viewProductDTO.setProductDescription(product.getProductDescription());
             viewProductDTO.setQuantity(product.getQuantity());
             viewProductDTO.setPrice(product.getPrice());
+            viewProductDTO.setProductStatus(product.getProductStatus().getProductStatusCode());
             productDTOs.add(viewProductDTO);
         }
         return ResponseEntity.ok(productDTOs);
@@ -164,54 +164,6 @@ public class ProductService {
         try {
             productRepository.save(product);
             return ResponseEntity.ok("Product updated successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
-        }
-    }
-
-    // Hold a product
-    public ResponseEntity<String> holdProduct(HoldDTO holdDTO) {
-        // Validate product code
-        if (holdDTO.getProductCode() == null || holdDTO.getProductCode().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Product code is required");
-        }
-
-        // Fetch the product
-        Optional<Product> optionalProduct = productRepository.findByProductCode(holdDTO.getProductCode());
-        if (optionalProduct.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found");
-        }
-
-        ProductStatus productStatus = productStatusRepository.findByproductStatusCode(holdDTO.getProductStatusCode())
-                .orElseThrow(() -> new RuntimeException("Product status not found"));
-
-        Product product = optionalProduct.get();
-        product.setProductStatus(productStatus);
-
-        try {
-            productRepository.save(product);
-            return ResponseEntity.ok("Product status updated successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
-        }
-    }
-
-    // Delete a product
-    public ResponseEntity<String> deleteProduct(Long id) {
-        // Validate product ID
-        if (id == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Product ID is required");
-        }
-
-        // Fetch the product
-        Optional<Product> optionalProduct = productRepository.findById(id);
-        if (optionalProduct.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found");
-        }
-
-        try {
-            productRepository.delete(optionalProduct.get());
-            return ResponseEntity.ok("Product deleted successfully");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
         }

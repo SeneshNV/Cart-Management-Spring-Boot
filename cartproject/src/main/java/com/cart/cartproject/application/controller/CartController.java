@@ -39,10 +39,10 @@ public class CartController {
     }
 
     // Buyers cart
-    @GetMapping("/me")
+    @GetMapping("/me/{id}")
     @PreAuthorize("hasRole('BUYER')")
-    public ResponseEntity<List<ViewCartDTO>> viewUserCart() {
-        return cartService.getUserCart();
+    public ResponseEntity<List<ViewCartDTO>> viewUserCart(@PathVariable Long id) {
+        return cartService.getUserCart(id);
     }
 
     // Admins can view the most selected products

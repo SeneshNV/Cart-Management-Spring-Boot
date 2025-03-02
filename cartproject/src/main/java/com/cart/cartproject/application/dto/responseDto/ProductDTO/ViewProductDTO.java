@@ -10,4 +10,5 @@ public class ViewProductDTO {
     private String productDescription;
     private Integer quantity;
     private Double price;
+    private String productStatus;
 }

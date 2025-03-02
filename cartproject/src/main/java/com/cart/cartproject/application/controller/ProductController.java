@@ -44,18 +44,4 @@ public class ProductController {
     public ResponseEntity<String> updateProduct(@RequestBody UpdateProductDTO updateProductDTO) {
         return productService.putProduct(updateProductDTO);
     }
-
-    // Only admins (ADMIN1, ADMIN2) can hold products
-    @PutMapping("/hold")
-    @PreAuthorize("hasAnyRole('ADMIN1', 'ADMIN2')")
-    public ResponseEntity<String> holdProduct(@RequestBody HoldDTO holdDTO) {
-        return productService.holdProduct(holdDTO);
-    }
-
-    // Only admins (ADMIN1, ADMIN2) can delete products
-    @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN1', 'ADMIN2')")
-    public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
-        return productService.deleteProduct(id);
-    }
 }

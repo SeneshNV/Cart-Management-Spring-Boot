@@ -2,6 +2,8 @@ package com.cart.cartproject.domain.service;
 
 import com.cart.cartproject.application.dto.requestDto.CartDTO.AddToCartDTO;
 import com.cart.cartproject.application.dto.responseDto.CartDTO.ViewCartDTO;
+import com.cart.cartproject.application.dto.responseDto.ProductDTO.ViewProductDTO;
+import com.cart.cartproject.application.dto.responseDto.UserDTO.ViewUsersDTO;
 import com.cart.cartproject.domain.entity.Cart;
 import com.cart.cartproject.domain.entity.Product;
 import com.cart.cartproject.domain.entity.User;
@@ -62,8 +64,26 @@ public class CartService {
         for (Cart cart : carts) {
             ViewCartDTO viewCartDTO = new ViewCartDTO();
             viewCartDTO.setId(cart.getId());
-            viewCartDTO.setProduct(cart.getProduct());
-            viewCartDTO.setUser(cart.getUser());
+
+            ViewProductDTO viewProductDTO = new ViewProductDTO();
+            viewProductDTO.setId(cart.getId());
+            viewProductDTO.setProductCode(cart.getProduct().getProductCode());
+            viewProductDTO.setProductName(cart.getProduct().getProductName());
+            viewProductDTO.setProductDescription(cart.getProduct().getProductDescription());
+            viewProductDTO.setQuantity(cart.getProduct().getQuantity());
+            viewProductDTO.setPrice(cart.getProduct().getPrice());
+            viewProductDTO.setProductStatus(cart.getProduct().getProductStatus().getProductStatusCode());
+
+            viewCartDTO.setProduct(viewProductDTO);
+
+            ViewUsersDTO viewUsersDTO = new ViewUsersDTO();
+            viewUsersDTO.setId(cart.getId());
+            viewUsersDTO.setUsername(cart.getUser().getUsername());
+            viewUsersDTO.setEmail(cart.getUser().getEmail());
+            viewUsersDTO.setUserRole(cart.getUser().getUserRoleCode().getUserRoleCode());
+            viewUsersDTO.setAccountStatus(cart.getUser().getAccountStatus());
+
+            viewCartDTO.setUser(viewUsersDTO);
             cartDTOs.add(viewCartDTO);
         }
 
@@ -71,17 +91,38 @@ public class CartService {
     }
 
 
-    public ResponseEntity<List<ViewCartDTO>> getUserCart() {
-        Long userId = 1L;
+    // specific buyer get cart
+    public ResponseEntity<List<ViewCartDTO>> getUserCart(Long id) {
 
-        List<Cart> carts = cartRepository.findByUserId(userId);
+
+        List<Cart> carts = cartRepository.findByUserId(id);
         List<ViewCartDTO> cartDTOs = new ArrayList<>();
 
         for (Cart cart : carts) {
+
             ViewCartDTO viewCartDTO = new ViewCartDTO();
             viewCartDTO.setId(cart.getId());
-            viewCartDTO.setProduct(cart.getProduct());
-            viewCartDTO.setUser(cart.getUser());
+
+            ViewProductDTO viewProductDTO = new ViewProductDTO();
+            viewProductDTO.setId(cart.getId());
+            viewProductDTO.setProductCode(cart.getProduct().getProductCode());
+            viewProductDTO.setProductName(cart.getProduct().getProductName());
+            viewProductDTO.setProductDescription(cart.getProduct().getProductDescription());
+            viewProductDTO.setQuantity(cart.getProduct().getQuantity());
+            viewProductDTO.setPrice(cart.getProduct().getPrice());
+            viewProductDTO.setProductStatus(cart.getProduct().getProductStatus().getProductStatusCode());
+
+            viewCartDTO.setProduct(viewProductDTO);
+
+            ViewUsersDTO viewUsersDTO = new ViewUsersDTO();
+            viewUsersDTO.setId(cart.getId());
+            viewUsersDTO.setUsername(cart.getUser().getUsername());
+            viewUsersDTO.setEmail(cart.getUser().getEmail());
+            viewUsersDTO.setUserRole(cart.getUser().getUserRoleCode().getUserRoleCode());
+            viewUsersDTO.setAccountStatus(cart.getUser().getAccountStatus());
+
+            viewCartDTO.setUser(viewUsersDTO);
+
             cartDTOs.add(viewCartDTO);
         }
 
