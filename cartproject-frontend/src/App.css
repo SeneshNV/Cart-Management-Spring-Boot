@@ -1,0 +1,8 @@
+.custom-navbar {
+  background-color: rgba(0, 0, 0) !important;
+  transition: background-color 0.3s ease-in-out;
+}
+
+/* .top-margin {
+  padding-top: 40px;
+} */

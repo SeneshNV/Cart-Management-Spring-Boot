@@ -1,45 +1,72 @@
-import React from "react";
-import { NavLink } from "react-router";
+import { useState } from "react";
+import { NavLink } from "react-router-dom";
 
 function NavBar() {
+  const [isNavOpen, setIsNavOpen] = useState(false);
+
   return (
-    <div>
-      <nav className="navbar navbar-expand-lg bg-body-tertiary">
-        <div className="container-fluid">
-          <a className="navbar-brand" href="#">
-            Navbar
-          </a>
+    <nav className="navbar navbar-expand-lg custom-navbar shadow-sm ">
+      <div className="container d-flex justify-content-between align-items-center px-3">
+        <NavLink className="navbar-brand fw-bold text-white" to="/">
+          SHOES FORT
+        </NavLink>
 
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
+        <button
+          className="navbar-toggler"
+          type="button"
+          onClick={() => setIsNavOpen(!isNavOpen)}
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
 
-          <div className="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              <li className="nav-item">
-                <NavLink to="/" end>
-                  Home
-                </NavLink>
-              </li>
-
-              <li className="nav-item">
-                <NavLink to="/trending" end>
-                  Trending Concerts
-                </NavLink>
-              </li>
-            </ul>
-          </div>
+        <div
+          className={`collapse navbar-collapse ${isNavOpen ? "show" : ""}`}
+          id="navbarNav"
+        >
+          <ul className="navbar-nav ms-auto d-flex gap-4">
+            <li className="nav-item">
+              <NavLink
+                to="/"
+                end
+                className={({ isActive }) =>
+                  `nav-link ${
+                    isActive ? "active fw-bold text-primary" : "text-white"
+                  }`
+                }
+              >
+                Home
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink
+                to="/login"
+                end
+                className={({ isActive }) =>
+                  `nav-link ${
+                    isActive ? "active fw-bold text-primary" : "text-white"
+                  }`
+                }
+              >
+                Login
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink
+                to="/signup"
+                end
+                className={({ isActive }) =>
+                  `nav-link ${
+                    isActive ? "active fw-bold text-primary" : "text-white"
+                  }`
+                }
+              >
+                Signup
+              </NavLink>
+            </li>
+          </ul>
         </div>
-      </nav>
-    </div>
+      </div>
+    </nav>
   );
 }
 
