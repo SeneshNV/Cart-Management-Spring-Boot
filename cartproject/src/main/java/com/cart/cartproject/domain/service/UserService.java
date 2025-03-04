@@ -13,6 +13,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ import java.util.Optional;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class UserService {
     @Autowired
     private JwtUtil jwtUtil;
@@ -153,7 +155,8 @@ public class UserService {
         }
     }
 
-    public ResponseEntity<ApiResponse> postLogin(LoginUserDTO loginUserDTO, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse> postLogin(LoginUserDTO loginUserDTO) {
+        log.info("=======================post login service==========================");
         try {
             if (!isValidEmail(loginUserDTO.getEmail())) {
                 ApiResponse apiResponse = new ApiResponse("Invalid email format", null, "error");
@@ -161,6 +164,7 @@ public class UserService {
             }
 
             Optional<User> optionalUser = userRepository.findByEmail(loginUserDTO.getEmail());
+            log.info("====================== User Found: {} ==========================", optionalUser.isPresent());
 
             if (optionalUser.isPresent()) {
                 User user = optionalUser.get();
@@ -172,15 +176,9 @@ public class UserService {
 
                 if (passwordEncoder.matches(loginUserDTO.getPassword(), user.getPassword())) {
                     String token = jwtUtil.generateToken(user.getEmail(), "BUYER");
+                    log.info("======================= Generated Token: {} =========================", token);
 
-                    // Set the JWT token in a cookie
-                    Cookie cookie = new Cookie("jwt", token);
-                    cookie.setHttpOnly(true);
-                    cookie.setPath("/");
-                    cookie.setSecure(true);
-                    response.addCookie(cookie);
-
-                    ApiResponse apiResponse = new ApiResponse("Login successful", null, "success");
+                    ApiResponse apiResponse = new ApiResponse("Login successful", token, "success");
                     return ResponseEntity.ok(apiResponse);
                 } else {
                     ApiResponse apiResponse = new ApiResponse("Invalid password", null, "error");
@@ -195,6 +193,7 @@ public class UserService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
         }
     }
+
 
     public ResponseEntity<ApiResponse> postAdminLogin(LoginUserDTO loginUserDTO, HttpServletResponse response) {
         try {

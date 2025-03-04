@@ -3,23 +3,47 @@ import "./Auth.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+interface FormData {
+  email: string;
+  password: string;
+}
 
+function LoginPage() {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState<FormData>({
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
+    const { email, password } = formData;
+
+    if (!email || !password) {
+      alert("All field are required");
+      return;
+    }
+
     try {
       const response = await axios.post(
         "http://localhost:8080/api/v1/user/login",
+        formData,
         {
-          email,
-          password,
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
+
+      console.log(formData);
 
       if (response.data.status === "success") {
         console.log("Login successful. Redirecting to dashboard...");
@@ -60,8 +84,9 @@ const LoginPage: React.FC = () => {
                     type="email"
                     className="form-control"
                     id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     required
                   />
                 </div>
@@ -74,8 +99,9 @@ const LoginPage: React.FC = () => {
                     type="password"
                     className="form-control"
                     id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
                     required
                   />
                 </div>
@@ -98,6 +124,6 @@ const LoginPage: React.FC = () => {
       </div>
     </>
   );
-};
+}
 
 export default LoginPage;

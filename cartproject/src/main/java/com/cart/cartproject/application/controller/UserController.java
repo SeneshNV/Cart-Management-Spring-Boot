@@ -9,6 +9,7 @@ import com.cart.cartproject.domain.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/user")
 @AllArgsConstructor
 @CrossOrigin
+@Slf4j
 public class UserController {
 
     private UserService userService;
@@ -34,8 +36,9 @@ public class UserController {
 
     // Buyer login
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse> login(@RequestBody LoginUserDTO loginUserDTO, HttpServletResponse response) {
-        return userService.postLogin(loginUserDTO, response);
+    public ResponseEntity<ApiResponse> login(@RequestBody LoginUserDTO loginUserDTO) {
+        log.info("=====================================Buyer Request Initilize===============================");
+        return userService.postLogin(loginUserDTO);
     }
 
     // Admin login
@@ -58,7 +61,7 @@ public class UserController {
         Cookie cookie = new Cookie("jwt", null);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        cookie.setMaxAge(0); // Set the cookie's max age to 0 to delete it
+        cookie.setMaxAge(0);
         response.addCookie(cookie);
 
         return ResponseEntity.ok("Logged out successfully");
